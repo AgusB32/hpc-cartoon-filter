@@ -43,27 +43,22 @@ def main():
     for res_label, img_path, prefix in IMAGES:
         for ksize in [3, 5]:
             for poster in [3, 9]:
-                save_img = (ksize == 3 and poster == 9)
-
-                out_seq = f"output/{prefix}_cartoon_SEQ.jpg" if save_img else "-"
+                out_seq = f"output/{prefix}_cartoon_f{ksize}_p{poster}.jpg"
                 t_seq = run_cmd(["./bin/cartoon_seq", img_path, out_seq, str(ksize), str(poster)])
                 add_row(rows, res_label, ksize, poster, "Secuencial", "1 thread", 1, t_seq, t_seq)
 
                 for th in [2, 4, 8, 12]:
-                    out_omp = f"output/{prefix}_cartoon_OMP.jpg" if (save_img and th == 4) else "-"
-                    t = run_cmd(["./bin/cartoon_omp", img_path, out_omp, str(ksize), str(poster), str(th)])
+                    t = run_cmd(["./bin/cartoon_omp", img_path, "-", str(ksize), str(poster), str(th)])
                     add_row(rows, res_label, ksize, poster, "OpenMP", f"{th} threads", th, t, t_seq)
 
                 for np in [2, 4, 8, 12]:
-                    out_mpi = f"output/{prefix}_cartoon_MPI.jpg" if (save_img and np == 4) else "-"
                     t = run_cmd(["mpirun", "--oversubscribe", "-np", str(np),
-                                 "./bin/cartoon_mpi", img_path, out_mpi, str(ksize), str(poster)])
+                                 "./bin/cartoon_mpi", img_path, "-", str(ksize), str(poster)])
                     add_row(rows, res_label, ksize, poster, "MPI", f"{np} procs", np, t, t_seq)
 
                 for np, th in [(2, 2), (2, 4), (4, 2), (3, 4)]:
-                    out_hyb = f"output/{prefix}_cartoon_HYBRID.jpg" if (save_img and (np, th) == (2, 2)) else "-"
                     t = run_cmd(["mpirun", "--oversubscribe", "-np", str(np),
-                                 "./bin/cartoon_hybrid", img_path, out_hyb, str(ksize), str(poster), str(th)])
+                                 "./bin/cartoon_hybrid", img_path, "-", str(ksize), str(poster), str(th)])
                     add_row(rows, res_label, ksize, poster, "Hibrido", f"{np}p x {th}t", np * th, t, t_seq)
 
     csv_path = "output/resultados_benchmark.csv"
